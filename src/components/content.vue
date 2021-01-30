@@ -1,6 +1,33 @@
 <template>
   <!-- section main -->
   <section class="main" id="main">
+    <div class="row mb-5 search-sort">
+      <div class="col-5 box-search ml-n2">
+        <b-form-input
+          type="text"
+          v-model="search"
+          @keyup="searchData(search)"
+          placeholder="Search menu"
+        ></b-form-input>
+      </div>
+      <div class="col-7 box-sort">
+        <div class="container-sort">
+          <select id="sort-box" v-model="formSort">
+            <option value="" selected>Select</option>
+            <option value="name&metode=asc">Name A-Z</option>
+            <option value="name&metode=desc">Name Z-A</option>
+            <option value="price&metode=asc">Price (ASC)</option>
+            <option value="price&metode=desc">Price (DESC))</option>
+          </select>
+          <button
+            @click="sortButton(formSort)"
+            class="btn btn-dark btn-sort ml-2 mr-4"
+          >
+            Sort
+          </button>
+        </div>
+      </div>
+    </div>
     <div class="row" id="menu-list">
       <div v-for="(element, index) in listItems" :key="index">
         <div class="col-sm-6 col-md-4">
@@ -31,6 +58,16 @@
         </div>
       </div>
     </div>
+    <div class="overflow-auto mr-4">
+      <b-pagination
+        @input="pageProduct('')"
+        v-model="currentPage"
+        :total-rows="rowData"
+        :per-page="limitData"
+        size="md"
+        align="right"
+      ></b-pagination>
+    </div>
   </section>
   <!-- section main end -->
 </template>
@@ -40,7 +77,14 @@ import Axios from 'axios'
 export default {
   data () {
     return {
-      listItems: []
+      listItems: [],
+      search: '',
+      formSort: '',
+      icon: 'sort-alpha-down',
+      status: false,
+      currentPage: 1,
+      rowData: '',
+      limitData: 9
     }
   },
   methods: {
@@ -50,24 +94,38 @@ export default {
     readDetail (id) {
       this.$router.push({ path: '/detail/' + id })
     },
-    getdataProduct () {
-      // const data = '?name=tea'
-      // const data = '?page=1&limit=8'
-      // const data = '?order=name&metode=asc'
-      // const data = 'code=Coffee'
-      Axios.get('http://localhost:3000/product').then((response) => {
-        this.listItems = response.data
+    sortButton (datasort) {
+      // const searching = this.searchData(this.search)
+      this.getdataProduct([], datasort)
+      // return datasort
+    },
+    getdataProduct (datasearch, datasort) {
+      const searching = datasearch || ''
+      const sorted = datasort || 'id&metode=asc'
+      Axios.get(`http://localhost:3000/product?name=${searching}&order=${sorted}&page=${this.currentPage}&limit=${this.limitData}`).then((response) => {
+        this.listItems = response.data.data
+        this.rowData = response.data.pagination.total
+        // console.log(response.data)
       }).catch((err) => {
         console.log(err)
       })
+      // return [searching, sorted]
     },
     addCart (data) {
       this.$emit('thisEmit', data)
-      // console.log(data)
+    },
+    searchData (search) {
+      // const datasort = this.sortButton(this.formSort)
+      this.getdataProduct(search, [])
+      // return search
+    },
+    pageProduct () {
+      this.getdataProduct()
     }
   },
   mounted () {
     this.getdataProduct()
+    this.pageProduct()
   }
 }
 </script>

@@ -18,7 +18,7 @@
                 >
                   <i class="fas fa-minus"></i>
                 </button>
-                <span class="cart-items">x{{ items.incart }}</span>
+                <span class="cart-items">x{{ items.qty }}</span>
                 <button
                   @click="btnIncrement(items.id)"
                   class="btn btn-success btn-plus"
@@ -34,14 +34,14 @@
                 >
                   <i class="fas fa-times"></i>
                 </button>
-                <span class="total-items">{{ convertRP(items.subTotal) }}</span>
+                <span class="total-items">{{ convertRP(items.subtotal) }}</span>
               </div>
             </div>
           </div>
         </div>
         <div class="row" id="line-cart">
           <div class="col-6">
-            <h3 class="buy-total">Total:</h3>
+            <h3 class="buy-total ml-2">Total</h3>
           </div>
           <div class="col-6">
             <span class="total-price">{{ convert(total) }}</span>
@@ -51,6 +51,31 @@
           <div class="col-12 ml-2">
             <p class="no-ppn">*Belum termasuk ppn</p>
           </div>
+        </div>
+        <div class="form-group row">
+          <label for="invoices-form">Invoice</label>
+          <div class="input">
+            <input
+              type="number"
+              v-model="formdata.invoices"
+              class="form-control"
+              placeholder="1234"
+              id="invoices-form"
+            />
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="cashier-form">Cashier</label>
+          <div class="input">
+            <select id="cashier-form" v-model="formdata.nameCashier">
+              <option value="">Select Name</option>
+              <option value="Cashier 1">Cashier 1</option>
+              <option value="Cashier 2">Cashier 2</option>
+              <option value="Pevita Pearce">Pevita Pearce</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
           <div class="col-12">
             <button
               @click="checkOUT()"
@@ -60,6 +85,8 @@
               Checkout
             </button>
           </div>
+        </div>
+        <div class="row">
           <div class="col-12">
             <button
               @click="cancelCart()"
@@ -71,15 +98,15 @@
           </div>
         </div>
       </aside>
-      <div class="modalc heckout">
+      <div class="modalcheckout">
         <b-modal
-          ref="my-modal"
+          ref="my-modal-checkout"
           hide-footer
-          :title="'Checkout ' + 'code pemesanan #' + code"
+          :title="'Checkout ' + 'code pemesanan #' + formdata.invoices"
         >
           <div class="row mb-3">
             <div class="col-12">
-              <h6>Cashier: {{ nameCashier }}</h6>
+              <h6>Cashier: {{ formdata.nameCashier }}</h6>
             </div>
           </div>
           <div
@@ -89,10 +116,10 @@
           >
             <div class="row">
               <div class="col-6 mt-n3">{{ items.name }}</div>
-              <div class="col-2 mt-n3">x {{ items.incart }}</div>
+              <div class="col-2 mt-n3">x {{ items.qty }}</div>
               <div class="col-4 mt-n3">
                 <p class="p-total">
-                  {{ convertRP(items.price * items.incart) }}
+                  {{ convertRP(items.price * items.qty) }}
                 </p>
               </div>
             </div>
@@ -128,6 +155,13 @@
             <b-button class="mt-3" variant="danger" block @click="sendEmail()"
               >Send Email</b-button
             >
+            <b-button
+              class="mt-3 mb-3"
+              variant="dark"
+              block
+              @click="cancelModel()"
+              >Cancel</b-button
+            >
           </div>
         </b-modal>
       </div>
@@ -156,10 +190,13 @@ export default {
     return {
       stateShow: false,
       dataCART: [],
-      code: this.randomnumber(),
+      datalist: [],
+      formdata: {
+        invoices: '',
+        nameCashier: ''
+      },
       total: 0,
-      idx: 0,
-      nameCashier: 'Cah Gagah'
+      idx: 0
     }
   },
   components: {
@@ -190,13 +227,13 @@ export default {
     totalPrice () {
       this.total = 0
       this.dataCART.forEach((elm) => {
-        this.total = this.total + elm.subTotal
+        this.total = this.total + elm.subtotal
       })
     },
     indexCart () {
       this.idx = 0
       this.dataCART.forEach((elm) => {
-        this.idx = this.idx + elm.incart
+        this.idx = this.idx + elm.qty
         document.querySelector('span.index-item').textContent = this.idx
       })
     },
@@ -210,20 +247,20 @@ export default {
         alert('Data sudah ada di list cart!')
         // this.dataCART.forEach(element => {
         //   if (element.id === data.id) {
-        //     element.incart += 1
+        //     element.qty += 1
         //   }
         // })
       } else {
         const newDataCart = {
-          incart: 1,
-          invoices: this.code,
+          qty: 1,
+          // invoices: this.formdata.invoices,
           id: data.id,
           name: data.name,
-          cashier: this.nameCashier,
+          // cashier: this.formdata.nameCashier,
           category: data.category,
           price: data.price,
           image: data.image,
-          subTotal: 1 * data.price
+          subtotal: 1 * data.price
         }
         // this.dataCART = [...this.dataCART, data]
         this.dataCART = [...this.dataCART, newDataCart]
@@ -236,12 +273,12 @@ export default {
       const min = 1
       this.dataCART.forEach(element => {
         if (element.id === id) {
-          element.incart -= 1
-          element.subTotal = element.incart * element.price
-          if (element.incart < min) {
+          element.qty -= 1
+          element.subtotal = element.qty * element.price
+          if (element.qty < min) {
             alert('Minimum Pemesanan' + min + ' item!')
-            element.incart = min
-            element.subTotal = min * element.price
+            element.qty = min
+            element.subtotal = min * element.price
           }
         }
       })
@@ -252,12 +289,12 @@ export default {
       const max = 100
       this.dataCART.forEach(element => {
         if (element.id === id) {
-          element.incart += 1
-          element.subTotal = element.incart * element.price
-          if (element.incart > max) {
+          element.qty += 1
+          element.subtotal = element.qty * element.price
+          if (element.qty > max) {
             alert('Maksimum pemesanan ' + max + ' item!')
-            element.incart = max
-            element.subTotal = max * element.price
+            element.qty = max
+            element.subtotal = max * element.price
           }
         }
       })
@@ -265,29 +302,64 @@ export default {
       this.indexCart()
     },
     checkOUT () {
-      this.$refs['my-modal'].show()
+      this.$refs['my-modal-checkout'].show()
+      this.dataCART.forEach((e) => {
+        this.datalist.push({
+          id: e.id,
+          invoices: this.formdata.invoices,
+          cashier: this.formdata.nameCashier,
+          item: e.name,
+          qty: e.qty,
+          price: e.price,
+          subtotal: e.subtotal
+        })
+      })
+      // console.log(this.datalist)
+      // send data to table cart
+      Axios.post('http://localhost:3000/cart', this.datalist).then((response) => {
+        console.log(response)
+      }).catch((error) => {
+        console.log(error)
+      })
     },
-    randomnumber () {
-      const max = 100
-      return Math.floor(Math.random() * Math.floor(max))
+    cancelModel () {
+      this.$refs['my-modal-checkout'].hide()
+      // console.log(this.dataCART[0].invoices)
+      // delete data tabel cart base on number invoice
+      Axios.delete('http://localhost:3000/cart/' + this.dataCART[0].invoices).then((response) => {
+        console.log(response)
+      }).catch((error) => {
+        console.log(error)
+      })
     },
     print () {
       // alert('print data!')
+      const newDATA = []
+      this.datalist.forEach((e) => {
+        newDATA.push({
+          invoices: e.invoices,
+          cashier: e.cashier,
+          cart: e.item + ' x' + e.qty
+        })
+      })
+
+      // console.log(newDATA)
+
       // grab invoices data
-      const idorder = this.dataCART[0].invoices
+      const idorder = newDATA[0].invoices
       const invoices = '#' + idorder.toString()
       // grab cashier data
-      const cashier = this.dataCART[0].cashier
+      const cashier = newDATA[0].cashier
       // grab date data
       const date = '18 Januari 2020'
       // grab cart data
-      const mapping = this.dataCART.map((el) => {
-        return el.name
+      const mapping = newDATA.map((el) => {
+        return el.cart
       })
       const cart = mapping.join(', ')
       // grab total
       const ppn = 0.1 // 10%
-      const amount = this.convertRP((ppn * this.total) + this.total)
+      const amount = ppn * this.total + this.total
 
       // output
       // console.log(invoices)
@@ -310,7 +382,7 @@ export default {
       // send data
       Axios.post('http://localhost:3000/history', history).then((response) => {
         // this.$router.push({ path: '/' })
-        this.$refs['my-modal'].hide()
+        this.$refs['my-modal-checkout'].hide()
         this.cancelCart()
       }).catch((err) => {
         console.log(err)
@@ -323,6 +395,7 @@ export default {
     cancelCart () {
       this.stateShow = false
       this.dataCART = []
+      this.datalist = []
       this.idx = 0
       document.querySelector('span.index-item').textContent = this.idx
     }

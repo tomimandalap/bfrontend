@@ -1,4 +1,4 @@
-<template>
+b<template>
   <!-- section main -->
   <section class="main" id="main">
     <!-- history-card -->
@@ -107,33 +107,10 @@
               <a class="dropdown-item" href="#">Years</a>
             </div>
           </div>
-
-          <!-- <table class="tables" id="myTable">
-            <thead>
-              <tr>
-                <th>Invoices</th>
-                <th>Cashier</th>
-                <th>Date</th>
-                <th>Order</th>
-                <th>Amount</th>
-              </tr>
-            </thead>
-            <tbody
-              class="table-list"
-              v-for="(element, index) in dataTabel"
-              :key="index"
-            >
-              <tr>
-                <td>{{ element.id }}</td>
-                <td>{{ element.cashier }}</td>
-                <td>{{ element.date }}</td>
-                <td>{{ element.cart }}</td>
-                <td>{{ convert(element.amount) }}</td>
-              </tr>
-            </tbody>
-          </table> -->
-          <div class="overflow-auto mt-n4">
+          <!-- pagination -->
+          <!-- <div class="overflow-auto mr-4">
             <b-pagination
+              @input="pageProduct('')"
               v-model="currentPage"
               :total-rows="rows"
               :per-page="perPage"
@@ -141,8 +118,47 @@
               size="sm"
               align="left"
             ></b-pagination>
+          </div> -->
+          <!-- tables
+          <table class="tables" id="my-table">
+            <thead>
+              <tr>
+                <th>Invoices</th>
+                <th>Cashier</th>
+                <th>Date</th>
+                <th>Order</th>
+                <th>Amount</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody
+              class="table-list"
+              id="my-table"
+            >
+              <tr>
+                <td>{{ element.id }}</td>
+                <td>{{ element.cashier }}</td>
+                <td>{{ element.date }}</td>
+                <td>{{ element.cart }}</td>
+                <td>{{ convert(element.amount) }}</td>
+                <td>
+                  <button class="btn btn-warning">Detail</button>
+                </td>
+              </tr>
+            </tbody>
+          </table> -->
+          <div class="overflow-auto mt-n4">
+            <b-pagination
+              @input="pageProduct('')"
+              v-model="currentPage"
+              :total-rows="rowData"
+              :per-page="perPage"
+              aria-controls="my-table"
+              size="sm"
+              align="left"
+            ></b-pagination>
 
-            <p class="mt-3" style="font-size: 18px">
+            <p class="mt-3" style="font-size: 14px">
               Current Page: {{ currentPage }}
             </p>
 
@@ -169,8 +185,10 @@ export default {
   data () {
     return {
       dataTabel: [],
+      myData: [],
       perPage: 6,
-      currentPage: 1
+      currentPage: 1,
+      rowData: ''
     }
   },
   methods: {
@@ -179,23 +197,42 @@ export default {
     },
     getDataTabel () {
       Axios.get('http://localhost:3000/history').then((response) => {
-        this.dataTabel = response.data
-        // console.log(response.data)
+        this.myData = response.data.data
+        this.rowData = response.data.pagination.total
+        // console.log(this.myData)
+        this.myData.forEach((e) => {
+          this.dataTabel.push({
+            id: e.id,
+            invoices: e.invoices,
+            cashier: e.cashier,
+            date: e.date.substring(0, 10),
+            cart: e.cart,
+            amount: this.convert(e.amount),
+            action: 'button'
+          })
+        })
       }).catch((err) => {
         console.log(err)
       })
     },
-    tables () {
-
+    pageProduct () {
+      // this.getDataTabel()
+      Axios.get(`http://localhost:3000/history?page=${this.currentPage}&limit=${this.perPage}`).then((response) => {
+        // this.myData = response.data.data
+        this.rowData = response.data.pagination.total
+      }).catch((err) => {
+        console.log(err)
+      })
     }
   },
   mounted () {
     this.getDataTabel()
-  },
-  computed: {
-    rows () {
-      return this.dataTabel.length
-    }
+    this.pageProduct()
   }
+  // computed: {
+  //   rows () {
+  //     return this.rowData
+  //   }
+  // }
 }
 </script>

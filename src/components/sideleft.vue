@@ -70,13 +70,18 @@
           <div class="row">
             <div class="col-2"><label for="category-form">Category</label></div>
             <div class="col-10">
-              <input
-                type="text"
-                v-model="form.category"
-                class="form-control mb-2"
-                placeholder="Category"
-                id="category-form"
-              />
+              <div class="input">
+                <select id="category-form" v-model="form.category">
+                  <option value="">Category</option>
+                  <option
+                    v-for="(element, index) in listcategory"
+                    :key="index"
+                    :value="element.category"
+                  >
+                    {{ element.category }}
+                  </option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -103,12 +108,19 @@ export default {
         name: '',
         image: '',
         price: ''
-      }
+      },
+      listcategory: []
     }
   },
   methods: {
     addModals () {
       this.$refs['my-modal-plus'].show()
+      Axios.get('http://localhost:3000/category').then((response) => {
+        this.listcategory = response.data.data
+        // console.log(response.data.data)
+      }).catch((error) => {
+        console.log(error)
+      })
     },
     hideModalPlus () {
       this.$refs['my-modal-plus'].hide()

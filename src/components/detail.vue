@@ -28,7 +28,7 @@
                 <th scope="row">{{ resultItem[0].category }}</th>
                 <td>{{ resultItem[0].name }}</td>
                 <td>{{ convert(resultItem[0].price) }}</td>
-                <td>{{ resultItem[0].date }}</td>
+                <td>{{ resultItem[0].date.substring(0, 10) }}</td>
               </tr>
             </tbody>
           </table>
@@ -109,7 +109,8 @@ export default {
     },
     getDetailItem () {
       Axios.get('http://localhost:3000/product/' + this.id).then((response) => {
-        this.resultItem = response.data
+        this.resultItem = response.data.data
+        // console.log(response.data.data)
       }).catch((err) => {
         console.log(err)
       }).finally(() => {
